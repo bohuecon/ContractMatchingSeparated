@@ -24,7 +24,7 @@ function solve_main(; para = para_de, diagnosis = false, save_results = false)
     return sol, error_flag
 end
 
-function solve_model(vec_Vi, vec_Ve, mat_Ve; para = para_de, sol_uc = sol_uc_de, bounds = bounds_de, err_tol = 1e-4, max_iter = 2000, diagnosis = false)
+function solve_model(vec_Vi, vec_Ve, mat_Ve; para = para_de, sol_uc = sol_uc_de, bounds = bounds_de, err_tol = 1e-4, diff_err_tol = 1e-10, max_iter = 2000, diagnosis = false)
 
     @unpack r, λi, λe, γi, γe, num_i, num_e, vec_prob_i, vec_prob_e, mat_prob_ie, num_dcases = para
 
@@ -40,11 +40,14 @@ function solve_model(vec_Vi, vec_Ve, mat_Ve; para = para_de, sol_uc = sol_uc_de,
     vec_TVi = copy(vec_Vi)
 
     # initialize iterations
-    print_skip = 500
+    # print_skip = 50
     iterate_count = 0
     err = err_tol + 1.0
+    diff_err = diff_err_tol + 1.0
 
-    while (iterate_count < max_iter) && (err > err_tol)
+    # while (iterate_count < max_iter) && (err > err_tol)
+
+    while (iterate_count < max_iter) && (err > err_tol) && (diff_err > diff_err_tol)
 
         # PREPARE THE VALUES OF CONTRACTS
 
@@ -119,7 +122,15 @@ function solve_model(vec_Vi, vec_Ve, mat_Ve; para = para_de, sol_uc = sol_uc_de,
         iterate_count += 1
         V = vcat(vec_Ve, reshape(mat_Ve, :, 1), vec_Vi)
         TV = vcat(vec_TVe, reshape(mat_TVe, :, 1), vec_TVi)
+
+        # save the previous err to old_err
+        old_err = err
+
+        # calculate the new err as err
         err = Base.maximum(abs, TV - V)
+
+        # calculate the difference
+        diff_err = abs(err - old_err)
 
         # V = vcat(vec_Ve, vec_Vi)
         # TV = vcat(vec_TVe, vec_TVi)
@@ -154,12 +165,12 @@ function solve_model(vec_Vi, vec_Ve, mat_Ve; para = para_de, sol_uc = sol_uc_de,
 
     externalContractPolicyUpdate!(arr_Mu, arr_cStar, arr_dummiesStar, mat_Mu, mat_Πe, vec_Vi, mat_Ve, para = para, sol_uc = sol_uc, bounds = bounds)
 
-    if iterate_count < max_iter
-        error_flag = false
-    else
-        error_flag = true
+    not_convergent = false
+
+    if diff_err < diff_err_tol
+        not_convergent = true
     end 
 
-    return (vec_Vi = vec_Vi, vec_Ve = vec_Ve, mat_Ve = mat_Ve, mat_Mu = mat_Mu, mat_cStar = mat_cStar, mat_dummiesStar = mat_dummiesStar, arr_Mu = arr_Mu, arr_cStar = arr_cStar, arr_dummiesStar = arr_dummiesStar), error_flag
+    return (vec_Vi = vec_Vi, vec_Ve = vec_Ve, mat_Ve = mat_Ve, mat_Mu = mat_Mu, mat_cStar = mat_cStar, mat_dummiesStar = mat_dummiesStar, arr_Mu = arr_Mu, arr_cStar = arr_cStar, arr_dummiesStar = arr_dummiesStar), not_convergent
 end
 

@@ -62,15 +62,16 @@ function genMoments(;est_para = est_para, diagnosis = false)
 
     # transform est para to deep model para
 
-    para = est_para2deep_para(est_para)
+    deep_para = est_para2deep_para(est_para)
 
     # est_para_initial = [3.65803, 2.72272, 4.94808, 17.0181, 4.11957, 5.3761, 4.04063, 2.58149, -0.547694, 4.59406, -6.87669, 0.290423, -0.793224, -0.240003, 0.479697, -2.84134, 4.54637, 1.99139, -153.041, 3.6081]
-    # para = est_para2deep_para(est_para_initial)
+    # est_para_initial = [9.2937, 13.0476, 15.8459, 9.2559, 6.3981, 9.2277, 8.5521, 5.9541, -0.9136, 4.0767, -6.8068, 1.1419, -2.5603, 3.7307, 3.097, 4.2259, 4.332, 4.0677, 70.3971, 41.4369]
+    # deep_para = est_para2deep_para(est_para_initial)
 
     # check if h() and γ() are quasicancave
     # i_flag = true means IT IS QUASICONCAVE
 
-    i_quasiconcave, e_quasiconcave = quasiconcave_objects(para)
+    i_quasiconcave, e_quasiconcave = quasiconcave_objects(deep_para)
 
     # if diagnosis
     #     println()
@@ -82,8 +83,8 @@ function genMoments(;est_para = est_para, diagnosis = false)
     if quasiconcave # both objectives are quasiconcave
 
         # solve the model
-        # sol, not_convergent = solve_main(para = para, diagnosis = true)
-        sol, not_convergent = solve_main(para = para, diagnosis = diagnosis)
+        # sol, not_convergent = solve_main(para = deep_para, diagnosis = true)
+        sol, not_convergent = solve_main(para = deep_para, diagnosis = diagnosis)
         
         # record not convergent cases 
 
