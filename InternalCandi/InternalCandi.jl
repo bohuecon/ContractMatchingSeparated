@@ -107,7 +107,7 @@ function genMoments(;est_para = est_para, diagnosis = false)
             return zeros(20), true, not_convergent
         else
             # generate moments
-            modelMoment = compute_moments(sol, para)
+            modelMoment = compute_moments(sol, deep_para)
             return modelMoment, false, not_convergent
         end
 

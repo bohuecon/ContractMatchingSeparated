@@ -16,7 +16,7 @@ function score(est_para::Vector, dataMoment::Vector, WeightMatrix::Matrix; diagn
 
     try 
 		modelMoment, error_flag, not_convergent = InternalCandi.genMoments(est_para = est_para, diagnosis = diagnosis)
-		# modelMoment, error_flag = InternalCandi.genMoments(est_para = est_para_initial, diagnosis = true)
+		# modelMoment, error_flag, not_convergent = InternalCandi.genMoments(est_para = est_para_initial, diagnosis = true)
 
 		if error_flag
 			# if either an explicit error by error_flag or an implicit error by NaN is simuMoment
