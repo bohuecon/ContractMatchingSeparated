@@ -74,15 +74,15 @@ function getgradient(ThetaStar::Vector,dataMoment::Vector)
 	for i=1:nDim
 
 		# h = Delta for derivative. h= a small number
-	    # h = abs(ThetaStar[i])*0.01; # See Judd page 281, "two-sided differences"
+	    h = abs(ThetaStar[i])*0.01; # See Judd page 281, "two-sided differences"
 
-		if i in [19, 20]
-		    h = abs(ThetaStar[i])*0.5; 
-		elseif i in [14, 18]
-			h = abs(ThetaStar[i])*10.0;
-		else
-		    h = abs(ThetaStar[i])*0.01; 
-		end
+		# if i in [19, 20]
+		#     h = abs(ThetaStar[i])*0.5; 
+		# elseif i in [14, 18]
+		# 	h = abs(ThetaStar[i])*10.0;
+		# else
+		#     h = abs(ThetaStar[i])*0.01; 
+		# end
 
 	    ThetaStar_U = copy(ThetaStar)
 	    ThetaStar_D = copy(ThetaStar)
