@@ -1,20 +1,5 @@
 # define deep functions
 
-# Here are the original profits in the venture capital context
-# c is equity share
-# dummies is a vector of dummies
-
-# g(i, e, ρ) = (0.8 * i^ρ + 0.2 * e^ρ)^(2 / ρ)
-
-# h(c, dummies, β1, β2, vec_β) = exp(β1 * c + β2 * c^2 + c * (1 - c) * dot(dummies, vec_β))
-
-# α(c, dummies, γ1, vec_γ) = 1 - (1 - c) * exp(γ1 * (1 - c) + c * (1 - c) * dot(dummies, vec_γ))
-
-# πi(c, dummies, β1, β2, vec_β, γ1, vec_γ) = α(c, dummies, γ1, vec_γ) * h(c, dummies, β1, β2, vec_β)
-# πe(c, dummies, β1, β2, vec_β, γ1, vec_γ) = (1 - α(c, dummies, γ1, vec_γ)) * h(c, dummies, β1, β2, vec_β)
-
-# Here are the updated profits for the CEO context
-
 g(i, e, ρ) = (0.5 * i^ρ + 0.5 * e^ρ)^(2 / ρ)
 h(c, dummies, β1, β2, vec_β) = exp(β1 * c + β2 * c^2 + c * (1 - c) * dot(dummies, vec_β))
 γ(c, dummies, γ1, vec_γ) = c * exp(γ1 * c + c * (1 - c) * dot(dummies, vec_γ))

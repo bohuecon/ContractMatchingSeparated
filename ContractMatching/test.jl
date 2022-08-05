@@ -1,26 +1,51 @@
 
-g(x, y) = x + y
-short = false
-function g_change(; short = false)
+using Parameters
+using Distributions
+using Optim
+using Optim: converged, maximum, maximizer, minimizer, iterations 
+# using JLD, HDF5
+using LinearAlgebra
+using Interpolations
+# using DataFrames
+# using CSV
 
-   if short 
-      g_s(x) = g(x, 3.0)
-   else 
-      g_s(x) = g(x, 6.0)
-      g_s(1.0)
-   end
+# using Plots
+# theme(:default)
+# using LaTeXStrings
 
-   # g_s(1.0) 
+# using Roots
+# using Statistics
+# using LoopVectorization
+# using BenchmarkTools
+# using ProfileView
 
-end
+include("cm_parameters.jl")
+include("cm_funcs.jl")
+# include("cm_solvemodel.jl")
+include("cm_bounds.jl")
+# include("cm_valueupdate.jl")
+include("cm_contracting.jl")
+# include("cm_policy.jl")
+# include("cm_plots.jl")
+# include("cm_moments.jl")
 
- g_change()
+
+
+est_para1 = [
+   5.54431, 14.9405, 8.01613, 1.35146, 1.16238, 6.70227, 3.12045, 3.46072, -0.526669, 
+   3.95762, -6.09421, 0.347944, -0.810893, -0.470389, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689, 
+   5.95762, -6.09421, 0.347944, -0.810893, -0.470389, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689]
+
+para1 = est_para2model_para(est_para1)
 
 
 
-est_para1 = [5.54431, 14.9405, 8.01613, 1.35146, 1.16238, 6.70227, 3.12045, 3.46072, -0.526669, 3.95762, -6.09421, 0.347944, -0.810893, -0.470389, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689, 5.95762, -3.09421, 0.347944, -0.810893, -0.470389, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689]
+sol_uc_in = optimal_c_uc(para = para1, external = false)
+sol_uc_ex = optimal_c_uc(para = para1, external = true)
+bounds_in = cBoundsFunc(para = para1, sol_uc = sol_uc_in, external = false)
+bounds_ex = cBoundsFunc(para = para1, sol_uc = sol_uc_ex, external = true)
 
-deep_para1 = est_para2deep_para(est_para1)
+
 deep_para1.β1 deep_para1.β1_ex deep_para1.β2 deep_para1.β2_ex 
 deep_para1.vec_β_ex
 i_quasiconcave, e_quasiconcave = quasiconcave_objects(deep_para1, external = false)

@@ -39,12 +39,12 @@ model_para = @with_kw (
     β2 = - β1/0.68,
     # β3 = -0.163,
     vec_β = [0.41, 0.29, -0.001],
-    γ1 = 0.151,
-    # γ2 = -0.200,
-    vec_γ = [-1.66, -2.12, 0.001],  
     β1_ex = 1.5,
     β2_ex = - β1_ex/0.68,
     vec_β_ex = [0.41, 0.29, -0.001],
+    γ1 = 0.151,
+    # γ2 = -0.200,
+    vec_γ = [-1.66, -2.12, 0.001],  
     γ1_ex = 0.151,
     vec_γ_ex = [-1.66, -2.12, 0.001],  
     κ0 = -455.56,
@@ -62,4 +62,21 @@ model_para = @with_kw (
     mat_g = gen_matg(vec_i, vec_e, g, ρ),
 )
 
+function est_para2model_para(est_para)
 
+    λi, λe, γi, γe, ai, bi, ae, be, ρ, β1, β2, β3, β4, β5, γ1, γ3, γ4, γ5, κ0, κ1, β1_ex, β2_ex, β3_ex, β4_ex, β5_ex, γ1_ex, γ3_ex, γ4_ex, γ5_ex, κ0_ex, κ1_ex = est_para
+
+    vec_β = [β3, β4, β5]
+    vec_γ = [γ3, γ4, γ5]    
+
+    vec_β_ex = [β3_ex, β4_ex, β5_ex]
+    vec_γ_ex = [γ3_ex, γ4_ex, γ5_ex]
+
+    para = model_para(λi = λi, λe = λe, γi = γi, γe = γe, ai = ai, bi = bi, ae = ae, be = be, ρ = ρ, β1 = β1, β2 = β2, vec_β = vec_β, γ1 = γ1, vec_γ = vec_γ, κ0 = κ0, κ1 = κ1, β1_ex = β1_ex, β2_ex = β2_ex, vec_β_ex = vec_β_ex, γ1_ex = γ1_ex, vec_γ_ex = vec_γ_ex, κ0_ex = κ0_ex, κ1_ex = κ1_ex)
+
+    return para
+end 
+
+
+# here is the default value
+# para_de = model_para()

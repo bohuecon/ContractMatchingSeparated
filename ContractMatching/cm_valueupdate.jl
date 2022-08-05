@@ -1,6 +1,6 @@
 
 
-function internalContractValueUpdate!(mat_Πi, mat_Πe, mat_Mu, vec_Vi, vec_Ve; para = para_de, sol_uc = sol_uc_de, bounds = bounds_de)
+function internalContractValueUpdate!(mat_Πi, mat_Πe, mat_Mu, vec_Vi, vec_Ve; sol_uc = sol_uc_de, bounds = bounds_de, para = para_de, external = false)
 
     @unpack num_i, num_e = para
 
@@ -9,7 +9,7 @@ function internalContractValueUpdate!(mat_Πi, mat_Πe, mat_Mu, vec_Vi, vec_Ve; 
         vi_val = vec_Vi[i_ind] # obtain search value of i
         ve_val = vec_Ve[e_ind] # obtain search value of e 
 
-        internalContract = contract(i_ind, e_ind, vi_val, ve_val, para = para, sol_uc = sol_uc, bounds = bounds)
+        internalContract = contract(i_ind, e_ind, vi_val, ve_val, para = para, sol_uc = sol_uc, bounds = bounds, external = external)
 
         if internalContract.flag
             mat_Πi[i_ind, e_ind] = internalContract.πi_star

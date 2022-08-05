@@ -19,7 +19,7 @@
 """
 function optimal_c_uc(;para = para_de, external = false)
 
-    @unpack vec_dummies, num_dcases, h, ρ, β1, β2, vec_β, γ1, vec_γ, β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex = deep_para
+    @unpack vec_dummies, num_dcases, h, ρ, β1, β2, vec_β, γ1, vec_γ, β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex = para
 
     if external 
         β1, β2, vec_β, γ1, vec_γ = β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex
@@ -79,9 +79,15 @@ end
         flag: 0 no matching, 1 matching
 
 """
-function contract(ii, ei, vi_val, ve_val; sol_uc = sol_uc_de, para = para_de, bounds = bounds_de)
+function contract(ii, ei, vi_val, ve_val; sol_uc = sol_uc_de, para = para_de, bounds = bounds_de, external = false)
 
-    @unpack vec_i, vec_e, πi, πe, ρ, β1, β2, vec_β, γ1, vec_γ, vec_dummies, num_dcases, num_dummies, mat_g = para
+    # @unpack vec_i, vec_e, πi, πe, ρ, β1, β2, vec_β, γ1, vec_γ, vec_dummies, num_dcases, num_dummies, mat_g = para
+
+    @unpack vec_i, vec_e, πi, πe, ρ, vec_dummies, num_dcases, num_dummies, mat_g, β1, β2, vec_β, γ1, vec_γ, β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex = para
+
+    if external 
+        β1, β2, vec_β, γ1, vec_γ = β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex
+    end
 
     @unpack ci_star_uc, di_star_uc, ce_star_uc, de_star_uc, vec_ci, vec_ce = sol_uc
 

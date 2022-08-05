@@ -12,7 +12,7 @@
 #
 # -------------------------------
 
-module InternalCandi
+module ContractMatching
 export genMoments, para
 
 using Parameters
@@ -35,31 +35,15 @@ using Interpolations
 # using BenchmarkTools
 # using ProfileView
 
-include("internal_candi_parameters.jl")
-include("internal_candi_solvemodel.jl")
-include("internal_candi_bounds.jl")
-include("internal_candi_valueupdate.jl")
-include("internal_candi_contracting.jl")
-include("internal_candi_policy.jl")
-include("internal_candi_funcs.jl")
-# include("internal_candi_plots.jl")
-include("internal_candi_moments.jl")
-
-function est_para2model_para(est_para)
-
-    λi, λe, γi, γe, ai, bi, ae, be, ρ, β1, β2, β3, β4, β5, γ1, γ3, γ4, γ5, κ0, κ1, β1_ex, β2_ex, β3_ex, β4_ex, β5_ex, γ1_ex, γ3_ex, γ4_ex, γ5_ex, κ0_ex, κ1_ex = est_para
-
-    vec_β = [β3, β4, β5]
-    vec_γ = [γ3, γ4, γ5]    
-
-    vec_β_ex = [β3_ex, β4_ex, β5_ex]
-    vec_γ_ex = [γ3_ex, γ4_ex, γ5_ex]
-
-    para = model_para(λi = λi, λe = λe, γi = γi, γe = γe, ai = ai, bi = bi, ae = ae, be = be, ρ = ρ, β1 = β1, β2 = β2, vec_β = vec_β, γ1 = γ1, vec_γ = vec_γ, κ0 = κ0, κ1 = κ1, β1_ex = β1_ex, β2_ex = β2_ex, vec_β_ex = vec_β_ex, γ1_ex = γ1_ex, vec_γ_ex = vec_γ_ex, κ0_ex = κ0_ex, κ1_ex = κ1_ex)
-
-    return para
-end 
-
+include("cm_parameters.jl")
+include("cm_solvemodel.jl")
+include("cm_bounds.jl")
+include("cm_valueupdate.jl")
+include("cm_contracting.jl")
+include("cm_policy.jl")
+include("cm_funcs.jl")
+# include("cm_plots.jl")
+include("cm_moments.jl")
 
 function genMoments(;est_para = est_para, diagnosis = false)
 

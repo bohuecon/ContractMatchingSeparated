@@ -3,12 +3,14 @@
 #------------------ solve the model ------------------#
 
 function solve_main(; para = para_de, diagnosis = false, save_results = false)
-# function solve_main(; para = para_de, save_results = false)
+
+    # function solve_main(; para = para_de, save_results = false)
 
     @unpack num_i, num_e = para
     sol_uc_in = optimal_c_uc(para = para, external = false)
     sol_uc_ex = optimal_c_uc(para = para, external = true)
-    bounds = cBoundsFunc(para = para, sol_uc = sol_uc)
+    bounds_in = cBoundsFunc(para = para, sol_uc = sol_uc_in, external = false)
+    bounds_ex = cBoundsFunc(para = para, sol_uc = sol_uc_ex, external = true)
 
     # initial values
     ini_vec_Vi = zeros(num_i)
@@ -16,16 +18,16 @@ function solve_main(; para = para_de, diagnosis = false, save_results = false)
     ini_mat_Ve = zeros(num_e, num_i)
     # ini_mat_Ve = repeat(ini_vec_Ve, 1, num_i)
 
-    sol, error_flag = solve_model(ini_vec_Vi, ini_vec_Ve, ini_mat_Ve, bounds = bounds, para = para, sol_uc = sol_uc, max_iter = 2000, diagnosis = diagnosis)
+    sol, error_flag = solve_model(ini_vec_Vi, ini_vec_Ve, ini_mat_Ve, bounds_in = bounds_in, bounds_ex = bounds_ex, sol_uc_in = sol_uc_in, sol_uc_ex = sol_uc_ex, para = para, max_iter = 2000, diagnosis = diagnosis)
 
-    # if save_results
-    #     save("internal_candi.jld", "vec_Vi", sol.vec_Vi, "vec_Ve", sol.vec_Ve, "mat_Ve", sol.mat_Ve, "mat_Mu", sol.mat_Mu, "mat_cStar", sol.mat_cStar, "mat_dummiesStar", sol.mat_dummiesStar, "arr_Mu", sol.arr_Mu, "arr_cStar", sol.arr_cStar, "arr_dummiesStar", sol.arr_dummiesStar)
-    # end
+    if save_results
+        save("cm.jld", "vec_Vi", sol.vec_Vi, "vec_Ve", sol.vec_Ve, "mat_Ve", sol.mat_Ve, "mat_Mu", sol.mat_Mu, "mat_cStar", sol.mat_cStar, "mat_dummiesStar", sol.mat_dummiesStar, "arr_Mu", sol.arr_Mu, "arr_cStar", sol.arr_cStar, "arr_dummiesStar", sol.arr_dummiesStar)
+    end
 
     return sol, error_flag
 end
 
-function solve_model(vec_Vi, vec_Ve, mat_Ve; para = para_de, sol_uc = sol_uc_de, bounds = bounds_de, err_tol = 1e-4, diff_err_tol = 1e-10, max_iter = 2000, diagnosis = false)
+function solve_model(vec_Vi, vec_Ve, mat_Ve; bounds_in = bounds_de, bounds_ex = bounds_de, sol_uc_in = sol_uc_de, sol_uc_ex = sol_uc_de, para = para_de, err_tol = 1e-4, diff_err_tol = 1e-10, max_iter = 2000, diagnosis = false)
 
     @unpack r, λi, λe, γi, γe, num_i, num_e, vec_prob_i, vec_prob_e, mat_prob_ie, num_dcases = para
 
@@ -53,7 +55,7 @@ function solve_model(vec_Vi, vec_Ve, mat_Ve; para = para_de, sol_uc = sol_uc_de,
         # PREPARE THE VALUES OF CONTRACTS
 
         # INTERNAL CONTRACTS
-        # the contract between firm and internal candidates
+        # the contract between firm and internal candidates given both have search values and given β and γ
         # firm's search value comes from vec_Vi, candidate's search value comes from vec_Ve
         # the output is updated mat_Πi and mat_Πe, both refer to the value of the pair (i, e) where e has no current firm options and i is the current firm 
 
@@ -71,12 +73,19 @@ function solve_model(vec_Vi, vec_Ve, mat_Ve; para = para_de, sol_uc = sol_uc_de,
         mat_Mu = falses(num_i, num_e)
 
         # update mat_Πi, mat_Πe by computing c(i, e)
-        internalContractValueUpdate!(mat_Πi, mat_Πe, mat_Mu, vec_Vi, vec_Ve, para = para, sol_uc = sol_uc, bounds = bounds)
+        internalContractValueUpdate!(mat_Πi, mat_Πe, mat_Mu, vec_Vi, vec_Ve, sol_uc = sol_uc_in, bounds = bounds_in, para = para, external = false)
 
         # EXTERNAL CONTRACTS
         # the contract between firm and external candidates (e, \iota)
         # firm's search value comes from vec_Vi, candidate's search value comes from mat_Ve
         # the outputs are updated arr_Πi, arr_Πe
+
+        mat_Πi_bm .= vec_Vi
+        mat_Πe_bm .= vec_Ve'
+        mat_Mu_bm = falses(num_i, num_e)
+
+        internalContractValueUpdate!(mat_Πi_bm, mat_Πe_bm, mat_Mu_bm, vec_Vi, vec_Ve, para = para, sol_uc = sol_uc_ex, bounds = bounds_ex)
+
 
         # Since β_ex and γ_ex (ex for external) are different for external contracts, in order to prepare for arr_Πi, arr_Πe, mat_Mu, we need to compute the the internal contract taking β_ex and γ_ex as deep parameters.
         # we generate mat_Πi_ex, mat_Πe_ex, mat_Mu_ex
