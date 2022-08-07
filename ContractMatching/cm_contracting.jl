@@ -19,27 +19,31 @@
 """
 function optimal_c_uc(;para = para_de, external = false)
 
-    @unpack vec_dummies, num_dcases, h, ρ, β1, β2, vec_β, γ1, vec_γ, β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex = para
+    # read model parameters 
 
-    if external 
-        β1, β2, vec_β, γ1, vec_γ = β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex
-    end
+    @unpack vec_dummies, num_dcases, h, ρ = para
+    β1, β2, vec_β, γ1, vec_γ = read_contract_para(para, external) 
 
-    # ignore g(i,e) since optimal c's independent of g
+    # ignore g(i,e) since optimal c's are independent of g
     πi_s(c, dummies) = πi(c, dummies, β1, β2, vec_β, γ1, vec_γ)
     πe_s(c, dummies) = πe(c, dummies, β1, β2, vec_β, γ1, vec_γ)
 
-    vec_ci = fill(0.0, num_dcases) # optimal c of i for each value of dummy combinations
-    vec_ce = fill(0.0, num_dcases) # optimal c of e for each value of dummy combinations
-    vec_πi = fill(0.0, num_dcases) # optimal pi_i for each value of dummy combinations
-    vec_πe = fill(0.0, num_dcases) # optimal pi_e for each value of dummy combinations 
+    # optimal c of i/e for each value of dummy combinations
+    vec_ci = fill(0.0, num_dcases) 
+    vec_ce = fill(0.0, num_dcases) 
+    # optimal pi_i/e for each value of dummy combinations
+    vec_πi = fill(0.0, num_dcases) 
+    vec_πe = fill(0.0, num_dcases) 
 
     for dummies_ind in eachindex(vec_dummies)
+        
         dummies = vec_dummies[dummies_ind]
+
         # optimization for i given a combination of dummy variables
         result_i = optimize(c -> - πi_s(c, dummies), 0.0, 1.0)
         vec_ci[dummies_ind] = result_i.minimizer
         vec_πi[dummies_ind] = - result_i.minimum
+
         # optimization for e
         result_e = optimize(c -> - πe_s(c, dummies), 0.0, 1.0)
         vec_ce[dummies_ind] = result_e.minimizer
@@ -79,32 +83,23 @@ end
         flag: 0 no matching, 1 matching
 
 """
-function contract(ii, ei, vi_val, ve_val; sol_uc = sol_uc_de, para = para_de, bounds = bounds_de, external = false)
+function contract(ii, ei, vi_val, ve_val; sol_uc = sol_uc_de, bounds = bounds_de, para = para_de, external = false)
 
-    # @unpack vec_i, vec_e, πi, πe, ρ, β1, β2, vec_β, γ1, vec_γ, vec_dummies, num_dcases, num_dummies, mat_g = para
-
-    @unpack vec_i, vec_e, πi, πe, ρ, vec_dummies, num_dcases, num_dummies, mat_g, β1, β2, vec_β, γ1, vec_γ, β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex = para
-
-    if external 
-        β1, β2, vec_β, γ1, vec_γ = β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex
-    end
+    @unpack vec_i, vec_e, πi, πe, ρ, vec_dummies, num_dcases, num_dummies, mat_g = para
 
     @unpack ci_star_uc, di_star_uc, ce_star_uc, de_star_uc, vec_ci, vec_ce = sol_uc
 
+    β1, β2, vec_β, γ1, vec_γ = read_contract_para(para, external) 
+
     # set holders and set default value if no matching
-    πi_star = 0.0
-    πe_star = 0.0
-    c_star = -0.5
+    πi_star = 0.0; πe_star = 0.0; c_star = -0.5
     dummies_star = fill(-1, num_dummies)
-    flag = false # 0 represents not match, 1 represents match
+    flag = false # false represents not match, true represents match
 
     # pre calculation
-    i = vec_i[ii]
-    e = vec_e[ei]
-    g_val = mat_g[ii, ei]
+    i = vec_i[ii]; e = vec_e[ei]; g_val = mat_g[ii, ei]
 
     # πi according to ci_star_uc, di_star_uc
-
     πi_s(c, dummies) = πi(c, dummies, β1, β2, vec_β, γ1, vec_γ) * g_val
     πe_s(c, dummies) = πe(c, dummies, β1, β2, vec_β, γ1, vec_γ) * g_val
 
@@ -113,7 +108,7 @@ function contract(ii, ei, vi_val, ve_val; sol_uc = sol_uc_de, para = para_de, bo
     πee_star_uc = πe_s(ce_star_uc, de_star_uc)
 
     if πii_star_uc > vi_val && πee_star_uc > ve_val
-        # only so, a match is possible; if not, no match is formed, there is no need to update value functions   
+        # only so, a match is possible; if not, no match is formed, then there is no need to update value functions   
        
         if πei_star_uc >= ve_val 
             # the optimal value can be achieved
@@ -126,7 +121,7 @@ function contract(ii, ei, vi_val, ve_val; sol_uc = sol_uc_de, para = para_de, bo
         else 
             # πei_star_uc < ve_val, the maximized profits for i cannot be achieved, but still matching is possible
 
-            # make the container of optimal πi, πe, c, for each combination of dummy variables
+            # make containers of optimal πi, πe, c, for each combination of dummy variables
             vec_πi_star = fill(0.0, num_dcases)
             vec_πe_star = fill(0.0, num_dcases)
             vec_c_star = fill(0.0, num_dcases)
@@ -142,6 +137,9 @@ function contract(ii, ei, vi_val, ve_val; sol_uc = sol_uc_de, para = para_de, bo
                 ci_upper = bounds.vec_ciUpperBounds[dummies_ind](vi_val_adjusted)
                 ce_lower = bounds.vec_ceLowerBounds[dummies_ind](ve_val_adjusted)
                 ce_upper = bounds.vec_ceUpperBounds[dummies_ind](ve_val_adjusted)
+
+                # for a given dummies, solve for optimal c
+                # πi_s, πe_s are inserted, no need to have 'external'
 
                 vec_c_star[dummies_ind], vec_πi_star[dummies_ind], vec_πe_star[dummies_ind], vec_flag[dummies_ind] = contract_c(dummies_ind, vi_val, ve_val, πi_s, πe_s, ci_lower, ci_upper, ce_lower, ce_upper, sol_uc, para)
             end
@@ -167,26 +165,24 @@ end
 
 
 
-function externalContractFunc(ii, ei, vi_val, ve_val; sol_uc = sol_uc_de, para = para_de, bounds = bounds_de)
+function externalContractFunc(ii, ei, vi_val, ve_val; sol_uc = sol_uc_de, bounds = bounds_de, para = para_de)
 
-    @unpack vec_i, vec_e, πi, πe, ρ, β1, β2, vec_β, γ1, vec_γ, vec_dummies, num_dcases, num_dummies, mat_g = para
+    # make sure the assigned sol_uc, bounds are for external match
+
+    @unpack vec_i, vec_e, πi, πe, ρ, vec_dummies, num_dcases, num_dummies, mat_g = para
+
+    β1, β2, vec_β, γ1, vec_γ = para.β1_ex, para.β2_ex, para.vec_β_ex, para.γ1_ex, para.vec_γ_ex
 
     @unpack ci_star_uc, di_star_uc, ce_star_uc, de_star_uc, vec_ci, vec_ce = sol_uc
 
     # set holders and set default value if no matching
-    πi_star = 0.0
-    πe_star = 0.0
-    c_star = -0.5
+    πi_star = 0.0; πe_star = 0.0; c_star = -0.5
     dummies_star = fill(-1, num_dummies)
-    flag = false # 0 represents not match, 1 represents match
+    flag = false # false means no match, true means match
 
     # pre calculation
-    i = vec_i[ii]
-    e = vec_e[ei]
-    g_val = mat_g[ii, ei]
-
-    # πi according to ci_star_uc, di_star_uc
-
+    i = vec_i[ii]; e = vec_e[ei]; g_val = mat_g[ii, ei]
+    
     πi_s(c, dummies) = πi(c, dummies, β1, β2, vec_β, γ1, vec_γ) * g_val
     πe_s(c, dummies) = πe(c, dummies, β1, β2, vec_β, γ1, vec_γ) * g_val
 

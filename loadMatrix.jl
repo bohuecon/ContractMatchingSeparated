@@ -3,11 +3,11 @@
     println("-------------------------------- \n")
 
 	# load matrix of all moments
-	dataMoment = load("./dataMoment.jld", "dataMoment");
-	momentName = load("./dataMoment.jld", "momentName");
-	CovDataMoment = load("./dataMoment.jld", "CovMoment");
-	WeightMatrix = load("./dataMoment.jld", "WeightMatrix");
-	WeightMatrixDiag = load("./dataMoment.jld", "WeightMatrixDiag");
+	dataMoment = load("./dataMomentSeparated.jld", "dataMoment");
+	momentName = load("./dataMomentSeparated.jld", "momentName");
+	CovDataMoment = load("./dataMomentSeparated.jld", "CovMoment");
+	WeightMatrix = load("./dataMomentSeparated.jld", "WeightMatrix");
+	WeightMatrixDiag = load("./dataMomentSeparated.jld", "WeightMatrixDiag");
 	# WeightMatrix = WeightMatrix / minimum(diag(WeightMatrix))
 	# WeightMatrixDiag = WeightMatrixDiag / minimum(diag(WeightMatrixDiag))
 
@@ -44,8 +44,12 @@
 	# simplified_weight = WeightNormDiagnal/sum(WeightNormDiagnal)
 	# WeightMatrix = diagm(WeightNormDiagnal)
 
-	df_data = DataFrame(moment_names = momentName, moment_value = dataMoment, weight = diag(WeightMatrix))
-	show(df_data, allcols=true)
+	println("Non-diagnolized variance-covariance matrix")
+	df_data1 = DataFrame(moment_names = momentName, moment_value = dataMoment, weight = diag(WeightMatrix)./10000.)
+	show(df_data1, allcols=true, allrows = true)
+	println("\n \n Diagnolized variance-covariance matrix")
+	df_data2 = DataFrame(moment_names = momentName, moment_value = dataMoment, weight = diag(WeightMatrixDiag)./10000.)
+	show(df_data2, allcols=true, allrows = true)
     println()
 
  #    df_data = DataFrame(moment_names = momentName, moment_value = dataMoment, weight = diag(WeightMatrixDiag)./1000, importance = abs.(dataMoment) .* diag(WeightMatrixDiag)./1000)

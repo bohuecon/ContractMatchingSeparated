@@ -44,20 +44,14 @@ end
 
 function cBoundsFunc(; para = para_de, sol_uc = sol_uc_de, grid_length = 200, external = false)
 
-    # @unpack num_dcases, vec_dummies, vec_dummies, β1, β2, vec_β, γ1, vec_γ, πi, πe = para
-    @unpack vec_dummies, num_dcases, h, ρ, β1, β2, vec_β, γ1, vec_γ, β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex = para
-
-    if external 
-        β1, β2, vec_β, γ1, vec_γ = β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex
-    end
-    
+    @unpack vec_dummies, num_dcases, h, ρ = para
+    β1, β2, vec_β, γ1, vec_γ = read_contract_para(para, external)
     @unpack vec_ci, vec_ce = sol_uc
 
     vec_ciLowerBounds = Array{Function}(undef, num_dcases)
     vec_ciUpperBounds = Array{Function}(undef, num_dcases)
     vec_ceLowerBounds = Array{Function}(undef, num_dcases)
     vec_ceUpperBounds = Array{Function}(undef, num_dcases)
-
 
     for di in 1:num_dcases
 
@@ -67,19 +61,16 @@ function cBoundsFunc(; para = para_de, sol_uc = sol_uc_de, grid_length = 200, ex
         πi_ss(c) = πi(c, dummies, β1, β2, vec_β, γ1, vec_γ)
         πe_ss(c) = πe(c, dummies, β1, β2, vec_β, γ1, vec_γ)
 
-        # bounds for ci
 
         if ci_uc < 1e-5
 
             vec_ciLowerBounds[di] = x -> 0.0
-
             ciUpperGrids = range(ci_uc, 1.0, length = grid_length)
             vec_ciUpperBounds[di] = cUpperBoundGen(πi_ss, ciUpperGrids)
 
         elseif ci_uc > 1.0 - 1e-5
 
             vec_ciUpperBounds[di] = x -> 1.0
-
             ciLowerGrids = range(ci_uc, 1.0, length = grid_length)
             vec_ciLowerBounds[di] = cLowerBoundGen(πi_ss, ciLowerGrids)
 
@@ -87,7 +78,6 @@ function cBoundsFunc(; para = para_de, sol_uc = sol_uc_de, grid_length = 200, ex
             # so the optimal value is interior
             ciUpperGrids = range(ci_uc, 1.0, length = grid_length)
             vec_ciUpperBounds[di] = cUpperBoundGen(πi_ss, ciUpperGrids)
-
             ciLowerGrids = range(0.0, ci_uc, length = grid_length)
             vec_ciLowerBounds[di] = cLowerBoundGen(πi_ss, ciLowerGrids)
 
@@ -96,14 +86,12 @@ function cBoundsFunc(; para = para_de, sol_uc = sol_uc_de, grid_length = 200, ex
         if ce_uc < 1e-5
 
             vec_ceLowerBounds[di] = x -> 0.0
-
             ceUpperGrids = range(ce_uc, 1.0, length = grid_length)
             vec_ceUpperBounds[di] = cUpperBoundGen(πe_ss, ceUpperGrids)
 
         elseif ce_uc > 1.0 - 1e-5
 
             vec_ceUpperBounds[di] = x -> 1.0
-
             ceLowerGrids = range(ce_uc, 1.0, length = grid_length)
             vec_ceLowerBounds[di] = cLowerBoundGen(πe_ss, ceLowerGrids)
 
@@ -111,7 +99,6 @@ function cBoundsFunc(; para = para_de, sol_uc = sol_uc_de, grid_length = 200, ex
             # so the optimal value is interior
             ceUpperGrids = range(ce_uc, 1.0, length = grid_length)
             vec_ceUpperBounds[di] = cUpperBoundGen(πe_ss, ceUpperGrids)
-
             ceLowerGrids = range(0.0, ce_uc, length = grid_length)
             vec_ceLowerBounds[di] = cLowerBoundGen(πe_ss, ceLowerGrids)
 

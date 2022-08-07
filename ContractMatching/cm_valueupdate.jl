@@ -9,7 +9,7 @@ function internalContractValueUpdate!(mat_Πi, mat_Πe, mat_Mu, vec_Vi, vec_Ve; 
         vi_val = vec_Vi[i_ind] # obtain search value of i
         ve_val = vec_Ve[e_ind] # obtain search value of e 
 
-        internalContract = contract(i_ind, e_ind, vi_val, ve_val, para = para, sol_uc = sol_uc, bounds = bounds, external = external)
+        internalContract = contract(i_ind, e_ind, vi_val, ve_val, sol_uc = sol_uc, bounds = bounds, para = para, external = external)
 
         if internalContract.flag
             mat_Πi[i_ind, e_ind] = internalContract.πi_star
@@ -28,41 +28,37 @@ function externalContractValueUpdate!(arr_Πi, arr_Πe, mat_Mu, vec_Vi, mat_Ve; 
     for i_ind in 1:num_i, e_ind in 1:num_e, iota_ind in 1:num_i 
 
         # values of i and e in an internal matching
-        # internalMatchingValue_i = arr_Πi[i_ind, e_ind, iota_ind]
         internalMatchingValue_e = arr_Πe[i_ind, e_ind, iota_ind]
 
-        # the possibly higher search value
-        vi_val = vec_Vi[i_ind] # obtain search value of i
-        ve_val = mat_Ve[e_ind, iota_ind] # obtain search value of e
+        # internal match or not
         ieInternalMatch = mat_Mu[i_ind, e_ind]
         eiotaInternalMatch = mat_Mu[iota_ind, e_ind]
+
+        # search values
+        vi_val = vec_Vi[i_ind] # obtain search value of i
+        ve_val = mat_Ve[e_ind, iota_ind] # obtain search value of e
 
         # mat_Mu[iota_ind, e_ind] == true then e and iota can form a match, we may need to solve the constract again
         # internalMatchingValue_e >= ve_val means the higher search value of e is not a problem, no need to update
 
         # if mat_Mu[i_ind, e_ind] && mat_Mu[iota_ind, e_ind] && internalMatchingValue_e < 
 
-        if !ieInternalMatch 
+        if !ieInternalMatch
+            # external match has a no smaller outside value, if internal match is not possible, external match neither         
             # arr_Πi[i_ind, e_ind, iota_ind] = vi_val
             arr_Πe[i_ind, e_ind, iota_ind] = ve_val
 
-        elseif ieInternalMatch && eiotaInternalMatch && internalMatchingValue_e < ve_val                    
-            # thus the search value of e is higher and it binds the internalMatchingValue, then we need to solve a new contracting problem
-            
-            # # values of i and e in an internal matching
-            # internalMatchingValue_i = arr_Πi[i_ind, e_ind, iota_ind]
-            # internalMatchingValue_e = arr_Πe[i_ind, e_ind, iota_ind]
+        elseif ieInternalMatch && eiotaInternalMatch && internalMatchingValue_e < ve_val          
+            # need to compute the contract if (i,e) can form an internal match, (e, iota) can form an internal match, and (i,e) internal match value for e is lower than e's outside value
 
-            # # the possibly higher search value
-            # vi_val = vec_Vi[i_ind] # obtain search value of i
-            # ve_val = mat_Ve[e_ind, iota_ind] # obtain search value of e 
+            externalContract = externalContractFunc(i_ind, e_ind, vi_val, ve_val, sol_uc = sol_uc, bounds = bounds, para = para)
 
-            externalContract = externalContractFunc(i_ind, e_ind, vi_val, ve_val, sol_uc = sol_uc, para = para, bounds = bounds)
-
-            if externalContract.flag # if matching with higher mat_Ve, then update with the new contract
+            if externalContract.flag 
+            # successful match with higher ve_val, now update the contract
                 arr_Πi[i_ind, e_ind, iota_ind] = externalContract.πi_star
                 arr_Πe[i_ind, e_ind, iota_ind] = externalContract.πe_star
-            else # matching is not possible with this higher ve_val, the pair should get their search value which is
+            else 
+            # matching fails with higher ve_val, the pair should get their search value which is
                 arr_Πi[i_ind, e_ind, iota_ind] = vi_val
                 arr_Πe[i_ind, e_ind, iota_ind] = ve_val
             end

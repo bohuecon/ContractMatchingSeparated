@@ -7,13 +7,21 @@ h(c, dummies, β1, β2, vec_β) = exp(β1 * c + β2 * c^2 + c * (1 - c) * dot(du
 πi(c, dummies, β1, β2, vec_β, γ1, vec_γ) = h(c, dummies, β1, β2, vec_β) # the firm gets all 
 πe(c, dummies, β1, β2, vec_β, γ1, vec_γ) = γ(c, dummies, γ1, vec_γ) * h(c, dummies, β1, β2, vec_β) # the executive obtains the rest
 
-function quasiconcave_objects(deep_para; external = false)
+function read_contract_para(para, external)
 
-    @unpack vec_dummies, num_dcases, h, ρ, β1, β2, vec_β, γ1, vec_γ, β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex = deep_para
-
-    if external 
-        β1, β2, vec_β, γ1, vec_γ = β1_ex, β2_ex, vec_β_ex, γ1_ex, vec_γ_ex
+    if external
+        return para.β1_ex, para.β2_ex, para.vec_β_ex, para.γ1_ex, para.vec_γ_ex
+    else
+        return para.β1, para.β2, para.vec_β, para.γ1, para.vec_γ
     end
+
+end
+
+function quasiconcave_objects(para; external = false)
+
+    # read model parameters 
+    @unpack vec_dummies, num_dcases, h, ρ = para
+    β1, β2, vec_β, γ1, vec_γ = read_contract_para(para, external)
 
     πi_s(c, dummies) = πi(c, dummies, β1, β2, vec_β, γ1, vec_γ)
     πe_s(c, dummies) = πe(c, dummies, β1, β2, vec_β, γ1, vec_γ)

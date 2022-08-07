@@ -1,43 +1,28 @@
 
-using Parameters
-using Distributions
-using Optim
-using Optim: converged, maximum, maximizer, minimizer, iterations 
-# using JLD, HDF5
-using LinearAlgebra
-using Interpolations
-# using DataFrames
-# using CSV
-
-# using Plots
-# theme(:default)
-# using LaTeXStrings
-
-# using Roots
-# using Statistics
-# using LoopVectorization
-# using BenchmarkTools
-# using ProfileView
-
-include("cm_parameters.jl")
-include("cm_funcs.jl")
-# include("cm_solvemodel.jl")
-include("cm_bounds.jl")
-# include("cm_valueupdate.jl")
-include("cm_contracting.jl")
-# include("cm_policy.jl")
-# include("cm_plots.jl")
-# include("cm_moments.jl")
-
 
 
 est_para1 = [
-   5.54431, 14.9405, 8.01613, 1.35146, 1.16238, 6.70227, 3.12045, 3.46072, -0.526669, 
+   # common parameters λi, λe, γi, γe, ai, bi, ae, be, ρ
+   5.54431, 14.9405, 8.01613, 1.35146, 1.16238, 6.70227, 3.12045, 3.46072, -0.526669,
+   # internal β1, β2, β3, β4, β5, γ1, γ3, γ4, γ5, κ0, κ1
    3.95762, -6.09421, 0.347944, -0.810893, -0.470389, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689, 
-   5.95762, -6.09421, 0.347944, -0.810893, -0.470389, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689]
+   # external β1_ex, β2_ex, β3_ex, β4_ex, β5_ex, γ1_ex, γ3_ex, γ4_ex, γ5_ex, κ0_ex, κ1_ex
+   3.25762, -6.09421, 0.447944, -0.310893, -0.470389, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689]
 
 para1 = est_para2model_para(est_para1)
 
+i_quasiconcave_in, e_quasiconcave_in = quasiconcave_objects(para1, external = false)
+i_quasiconcave_ex, e_quasiconcave_ex = quasiconcave_objects(para1, external = true)
+
+sol, not_convergent = solve_main(para = para1, diagnosis = true, save_results = true)
+
+ @unpack vec_prob_i, vec_prob_e, mat_prob_ie, num_e, num_i, λi, γi, vec_i = para1
+ @unpack mat_Mu, arr_Mu, mat_cStar, arr_cStar, mat_dummiesStar, arr_dummiesStar = sol
+
+mat_d1Star = [dummies[1] for dummies in mat_dummiesStar]
+mat_d2Star = [dummies[2] for dummies in mat_dummiesStar]
+contour(vec_i, vec_e, mat_d1Star', xlabel = L"i", ylabel = L"e", fill = true, c = :OrRd_9, rev = true, title = L"d_1",size = (800, 600))
+contour(vec_i, vec_e, mat_d2Star', xlabel = L"i", ylabel = L"e", fill = true, c = :OrRd_9, rev = true, title = L"d_2", size = (800, 600))
 
 
 sol_uc_in = optimal_c_uc(para = para1, external = false)
