@@ -77,8 +77,10 @@ function StructEst(;MaxTime::Float64=120.0)
 	println("\n 2. Minimization: Set Up \n")
 	println("------------------------------------ \n")
 	
+	# λi, λe, γi, γe, ai, bi, ae, be, ρ, 
+	
 		open("estimation_log.csv", "w") do f
-		     write(f, "score, not_convergent, λi, λe, γi, γe, ai, bi, ae, be, ρ, Δβ1_in, β2_in, β3_in, β4_in, β5_in, γ1_in, γ3_in, γ4_in, γ5_in, κ0_in, κ1_in, Δβ1_ex, Δβ2_ex, Δβ3_ex, Δβ4_ex, Δβ5_ex, Δγ1_ex, Δγ3_ex, Δγ4_ex, Δγ5_ex, Δκ0_ex, Δκ1_ex, mean_search, var_search, mean_internal, var_internal, mean_delta_in, mean_delta_ex, var_delta_in, var_delta_ex, mean_explicit_in, mean_explicit_ex, mean_atwill_in, mean_atwill_ex, cov_delta_explicit_in, cov_delta_explicit_ex, cov_delta_atwill_in, cov_delta_atwill_ex, cov_explicit_atwill_in, cov_explicit_atwill_ex, cov_delta_search_in, cov_delta_search_ex, cov_explicit_search_in, cov_explicit_search_ex, cov_atwill_search_in, cov_atwill_search_ex, mean_long_in, mean_long_ex, cov_long_delta_in, cov_long_delta_ex, cov_long_explicit_in, cov_long_explicit_ex, cov_long_atwill_in, cov_long_atwill_ex, cov_long_internal, cov_long_search_in, cov_long_search_ex, score \n") 
+		     write(f, "score, not_convergent, Δβ1_in, β2_in, β3_in, β4_in, β5_in, γ1_in, γ3_in, γ4_in, γ5_in, κ0_in, κ1_in, Δβ1_ex, Δβ2_ex, Δβ3_ex, Δβ4_ex, Δβ5_ex, Δγ1_ex, Δγ3_ex, Δγ4_ex, Δγ5_ex, Δκ0_ex, Δκ1_ex, mean_search, var_search, mean_internal, var_internal, mean_delta_in, mean_delta_ex, var_delta_in, var_delta_ex, mean_explicit_in, mean_explicit_ex, mean_atwill_in, mean_atwill_ex, cov_delta_explicit_in, cov_delta_explicit_ex, cov_delta_atwill_in, cov_delta_atwill_ex, cov_explicit_atwill_in, cov_explicit_atwill_ex, cov_delta_search_in, cov_delta_search_ex, cov_explicit_search_in, cov_explicit_search_ex, cov_atwill_search_in, cov_atwill_search_ex, mean_long_in, mean_long_ex, cov_long_delta_in, cov_long_delta_ex, cov_long_explicit_in, cov_long_explicit_ex, cov_long_atwill_in, cov_long_atwill_ex, cov_long_internal, cov_long_search_in, cov_long_search_ex, score \n") 
 		 end
 
 		 open("log_err", "w") do f
@@ -87,7 +89,7 @@ function StructEst(;MaxTime::Float64=120.0)
 	
 		println("Suggested starting values")
 		est_para_name = [
-						"λi", "λe", "γi", "γe", "ai", "bi", "ae", "be", "ρ", 
+						# "λi", "λe", "γi", "γe", "ai", "bi", "ae", "be", "ρ", 
 						"Δβ1_in", "β2_in", "β3_in", "β4_in", "β5_in", "γ1_in", "γ3_in", "γ4_in", "γ5_in", "κ0_in", "κ1_in",
 						"Δβ1_ex", "Δβ2_ex", "Δβ3_ex", "Δβ4_ex", "Δβ5_ex", "Δγ1_ex", "Δγ3_ex", "Δγ4_ex", "Δγ5_ex", "Δκ0_ex", "Δκ1_ex"
 						# "β1_ex", "β2_ex", "β3_ex", "β4_ex", "β5_ex", "γ1_ex", "γ3_ex", "γ4_ex", "γ5_ex", "κ0_ex", "κ1_ex",
@@ -100,7 +102,8 @@ function StructEst(;MaxTime::Float64=120.0)
 
         est_para_initial = [
 				   # common parameters λi, λe, γi, γe, ai, bi, ae, be, ρ
-				   5.54431, 14.9405, 8.01613, 1.35146, 1.16238, 6.70227, 3.12045, 3.46072, -0.526669,
+					# 5.54431, 14.9405, 8.01613, 1.35146, 1.16238, 6.70227, 3.12045, 3.46072, -0.526669,
+				    # 7.9669, 6.4285, 11.3733, 19.6905, 4.3613, 5.6546, 4.7125, 9.0024, -0.2923
 				   # internal Δβ1, β2, Δβ3, Δβ4, Δβ5, γ1, γ3, γ4, γ5, κ0, κ1
 				   0.65, -6.09421, 6.44, 5.29, 6.08, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689, 
 				   # external Δβ1_ex, Δβ2_ex, Δβ3_ex, Δβ4_ex, Δβ5_ex, Δγ1_ex, Δγ3_ex, Δγ4_ex, Δγ5_ex, κ0_ex, κ1_ex
@@ -118,15 +121,15 @@ function StructEst(;MaxTime::Float64=120.0)
 		# set bounds on parameters
 		tBounds = [ 
 					#bounds,  est_para,  model_para
-					(3.0, 20.0),   # λi,  λi
-					(1.0, 20.0),   # λe,  λe
-					(3.0, 20.0),   # γi,  γi
-					(2.0, 20.0),   # γe,  γe
-					(2.0, 15.0),   # ai,  ai
-					(2.0, 15.0),   # bi,  bi
-					(1.0, 10.0),   # ae,  ae
-					(1.0, 15.0),   # be,  be
-					(-1.0, -0.05), # ρ,  ρ
+					# (7.966, 7.967),   # λi,  λi
+					# (6.428, 6.429),   # λe,  λe
+					# (11.373, 11.374),   # γi,  γi
+					# (16.690, 16.691),   # γe,  γe
+					# (4.361, 4.362),   # ai,  ai
+					# (2.0, 15.0),   # bi,  bi
+					# (1.0, 10.0),   # ae,  ae
+					# (1.0, 15.0),   # be,  be
+					# (-1.0, -0.05), # ρ,  ρ
 					(0.5, 0.9),    # Δβ1,  β1 = -β2 * Δβ1
 					(-10.0, -1.0),  # β2,  β2
 					(0.1, 30.0),   # Δβ3, β3 = β2 + Δβ3
@@ -139,17 +142,53 @@ function StructEst(;MaxTime::Float64=120.0)
 					(-250.0, 100.0),  # κ0, κ0
 					(0.01, 80.00),    # κ1, κ1
 					(0.5, 0.9),       # Δβ1_ex, β1_ex = - β2_ex * Δβ1_ex
-					(0.5, 1.5),       # Δβ2_ex, β2_ex = β2 * Δβ2
+					(0.8, 1.2),       # Δβ2_ex, β2_ex = β2 * Δβ2
 					(0.1, 30.0),      # Δβ3_ex, β3_ex = β2_ex + Δβ3_ex
 					(0.1, 30.0),      # Δβ4_ex, β4_ex = β2_ex + Δβ4_ex
 					(0.1, 30.0),      # Δβ5_ex, β5_ex = β2_ex + β3_ex + β4_ex + Δβ5_ex
-					(0.5, 1.5),       # Δγ1_ex, γ1_ex = γ1 * Δγ1_ex
-					(0.5, 1.5),       # Δγ3_ex, γ3_ex = γ3 * Δγ3_ex
-					(0.5, 1.5),       # Δγ4_ex, γ4_ex = γ4 * Δγ4_ex
-					(0.5, 1.5),       # Δγ5_ex, γ5_ex = γ5 * Δγ5_ex
+					(0.8, 1.2),       # Δγ1_ex, γ1_ex = γ1 * Δγ1_ex
+					(0.8, 1.2),       # Δγ3_ex, γ3_ex = γ3 * Δγ3_ex
+					(0.8, 1.2),       # Δγ4_ex, γ4_ex = γ4 * Δγ4_ex
+					(0.8, 1.2),       # Δγ5_ex, γ5_ex = γ5 * Δγ5_ex
 					(-250.0, 100.0),  # κ0_ex, κ0_ex
 					(0.01, 80.00),    # κ1_ex, κ1_ex
-								] 
+				] 
+
+          # A very general bounds vector
+	      #   tBounds = [ 
+				# 	#bounds,  est_para,  model_para
+				# 	(3.0, 20.0),   # λi,  λi
+				# 	(1.0, 20.0),   # λe,  λe
+				# 	(3.0, 20.0),   # γi,  γi
+				# 	(2.0, 20.0),   # γe,  γe
+				# 	(2.0, 15.0),   # ai,  ai
+				# 	(2.0, 15.0),   # bi,  bi
+				# 	(1.0, 10.0),   # ae,  ae
+				# 	(1.0, 15.0),   # be,  be
+				# 	(-1.0, -0.05), # ρ,  ρ
+				# 	(0.5, 0.9),    # Δβ1,  β1 = -β2 * Δβ1
+				# 	(-10.0, -1.0),  # β2,  β2
+				# 	(0.1, 30.0),   # Δβ3, β3 = β2 + Δβ3
+				# 	(0.1, 30.0),   # Δβ4, β4 = β2 + Δβ4
+				# 	(0.1, 30.0),   # Δβ5, β5 = β2 + β3 + β4 + Δβ5
+				# 	(0.1, 25.00),  # γ1, γ1
+				# 	(-25.00, 25.00),  # γ3, γ3
+				# 	(-25.00, 25.00),  # γ4, γ4
+				# 	(-25.00, 25.00),  # γ5, γ5
+				# 	(-250.0, 100.0),  # κ0, κ0
+				# 	(0.01, 80.00),    # κ1, κ1
+				# 	(0.5, 0.9),       # Δβ1_ex, β1_ex = - β2_ex * Δβ1_ex
+				# 	(0.8, 1.2),       # Δβ2_ex, β2_ex = β2 * Δβ2
+				# 	(0.1, 30.0),      # Δβ3_ex, β3_ex = β2_ex + Δβ3_ex
+				# 	(0.1, 30.0),      # Δβ4_ex, β4_ex = β2_ex + Δβ4_ex
+				# 	(0.1, 30.0),      # Δβ5_ex, β5_ex = β2_ex + β3_ex + β4_ex + Δβ5_ex
+				# 	(0.8, 1.2),       # Δγ1_ex, γ1_ex = γ1 * Δγ1_ex
+				# 	(0.8, 1.2),       # Δγ3_ex, γ3_ex = γ3 * Δγ3_ex
+				# 	(0.8, 1.2),       # Δγ4_ex, γ4_ex = γ4 * Δγ4_ex
+				# 	(0.8, 1.2),       # Δγ5_ex, γ5_ex = γ5 * Δγ5_ex
+				# 	(-250.0, 100.0),  # κ0_ex, κ0_ex
+				# 	(0.01, 80.00),    # κ1_ex, κ1_ex
+				# ] 
 
         # set lambda: number of samples to take per iteration, here means each process take 3 samples, could also be 4 or 5
         # if lambda = 0 is set, then it will be set based on the number of dimensions

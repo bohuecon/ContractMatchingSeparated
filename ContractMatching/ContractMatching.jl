@@ -87,6 +87,7 @@ function genMoments(;est_para = est_para, diagnosis = false)
 
         @unpack mat_Mu, mat_Mu_bm = sol
 
+        # there exists some type of firms that can not be matched
         firm_not_match = (minimum(sum(mat_Mu, dims = 2)) == 0) || (minimum(sum(mat_Mu_bm, dims = 2)) == 0)
 
         # firm_not_match = minimum(sum(mat_Mu .+ mat_Mu_bm, dims = 2)) == 0

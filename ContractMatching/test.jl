@@ -1,20 +1,13 @@
 
 
-
-est_para1 = [
-   # common parameters λi, λe, γi, γe, ai, bi, ae, be, ρ
-   5.54431, 14.9405, 8.01613, 1.35146, 1.16238, 6.70227, 3.12045, 3.46072, -0.526669,
-   # internal β1, β2, β3, β4, β5, γ1, γ3, γ4, γ5, κ0, κ1
-   3.95762, -6.09421, 0.347944, -0.810893, -0.470389, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689, 
-   # external β1_ex, β2_ex, β3_ex, β4_ex, β5_ex, γ1_ex, γ3_ex, γ4_ex, γ5_ex, κ0_ex, κ1_ex
-   3.25762, -6.09421, 0.447944, -0.310893, -0.470389, 1.20059, -3.47155, 4.24721, -5.86905, -147.622, 43.5689]
-
+est_para1 = [13.8675, 4.7868, 17.0767, 3.0885, 11.8292, 9.2259, 8.896, 11.384, -0.9988, 0.5264, -8.9659, 21.9348, 16.2269, 1.5267, 1.4956, -1.8658, 13.2116, -24.9879, -142.0983, 25.2461, 0.8715, 0.9792, 21.7863, 24.4699, 14.5846, 0.6159, 0.7029, 1.479, 1.4534, 23.2289, 45.2427]
 para1 = est_para2model_para(est_para1)
-
 i_quasiconcave_in, e_quasiconcave_in = quasiconcave_objects(para1, external = false)
 i_quasiconcave_ex, e_quasiconcave_ex = quasiconcave_objects(para1, external = true)
-
 sol, not_convergent = solve_main(para = para1, diagnosis = true, save_results = true)
+@unpack mat_Mu, mat_Mu_bm = sol
+firm_not_match = (minimum(sum(mat_Mu, dims = 2)) == 0) || (minimum(sum(mat_Mu_bm, dims = 2)) == 0)
+modelMoment = compute_moments(sol, para1)
 
  @unpack vec_prob_i, vec_prob_e, mat_prob_ie, num_e, num_i, λi, γi, vec_i = para1
  @unpack mat_Mu, arr_Mu, mat_cStar, arr_cStar, mat_dummiesStar, arr_dummiesStar = sol
@@ -31,13 +24,21 @@ bounds_in = cBoundsFunc(para = para1, sol_uc = sol_uc_in, external = false)
 bounds_ex = cBoundsFunc(para = para1, sol_uc = sol_uc_ex, external = true)
 
 
-deep_para1.β1 deep_para1.β1_ex deep_para1.β2 deep_para1.β2_ex 
-deep_para1.vec_β_ex
 i_quasiconcave, e_quasiconcave = quasiconcave_objects(deep_para1, external = false)
 i_quasiconcave, e_quasiconcave = quasiconcave_objects(deep_para1, external = true)
 
 #_________________________________________________________________
 
+
+using Plots
+using Parameters
+
+@unpack  β1, β2, vec_β, γ1, vec_γ = para1
+πi_s(c) = ContractMatching.πi(c, [0.0, 1.0, 0.0], β1, β2, vec_β, γ1, vec_γ)
+πe_s(c) = ContractMatching.πe(c, [0.0, 0.0, 0.0], β1, β2, vec_β, γ1, vec_γ) 
+
+vec_c = range(0.0, 1.0, length = 200)
+plot(vec_c, πi_s.(vec_c), label = "pi")
 
 
 # # # Objectives should be quasiconcave
@@ -109,10 +110,10 @@ plot!(vec_c, vec_c -> ve_val, label = "ve_val")
 using Plots
 theme(:default)
 using LaTeXStrings
+using JLD, HDF5
 
 include("internal_candi_plots.jl")
 
-using JLD, HDF5
 
 est_para_initial = [3.65803, 2.72272, 4.94808, 17.0181, 4.11957, 5.3761, 4.04063, 2.58149, -0.547694, 4.59406, -6.87669, 0.290423, -0.793224, -0.240003, 0.479697, -2.84134, 4.54637, 1.99139, -153.041, 3.6081]
 para = est_para2deep_para(est_para_initial)
