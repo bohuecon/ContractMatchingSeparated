@@ -78,9 +78,14 @@ function est_para2model_para(est_para)
     β2_ex = β2 * Δβ2_ex
     β1_ex = -β2_ex * Δβ1_ex
 
-    β3_ex = β2_ex + Δβ3_ex
-    β4_ex = β2_ex + Δβ4_ex
-    β5_ex = β2_ex + β3_ex + β4_ex + Δβ5_ex
+    # β3_ex = β2_ex + Δβ3_ex
+    # β4_ex = β2_ex + Δβ4_ex
+    # β5_ex = β2_ex + β3_ex + β4_ex + Δβ5_ex
+
+    β3_ex = β3 * Δβ3_ex
+    β4_ex = β4 * Δβ4_ex
+    β5_ex = β5 * Δβ5_ex
+
     vec_β_ex = [β3_ex, β4_ex, β5_ex]
 
     γ1_ex = γ1*Δγ1_ex
