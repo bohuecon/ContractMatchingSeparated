@@ -13,7 +13,7 @@
 # -------------------------------
 
 module ContractMatching
-export genMoments, para
+export genMoments, para, solve_main
 
 using Parameters
 using Distributions
