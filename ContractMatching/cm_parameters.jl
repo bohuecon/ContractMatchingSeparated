@@ -61,6 +61,7 @@ model_para = @with_kw (
 )
 
 # only estimate contract parameters
+
 function est_para2model_para(est_para)
 
     λi, λe, γi, γe, ai, bi, ae, be, ρ = 7.9669, 6.4285, 11.3733, 19.6905, 4.3613, 5.6546, 4.7125, 9.0024, -0.2923
@@ -70,7 +71,7 @@ function est_para2model_para(est_para)
     β1 = -β2 * Δβ1
     β3 = β2 + Δβ3
     β4 = β2 + Δβ4
-    β5 = β2 + β3 + β4 + Δβ5
+    β5 = β2 - β3 - β4 + Δβ5
 
     vec_β = [β3, β4, β5]
     vec_γ = [γ3, γ4, γ5] 
@@ -80,7 +81,7 @@ function est_para2model_para(est_para)
 
     # β3_ex = β2_ex + Δβ3_ex
     # β4_ex = β2_ex + Δβ4_ex
-    # β5_ex = β2_ex + β3_ex + β4_ex + Δβ5_ex
+    # β5_ex = β2_ex - β3_ex - β4_ex + Δβ5_ex
 
     β3_ex = β3 * Δβ3_ex
     β4_ex = β4 * Δβ4_ex
