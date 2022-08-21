@@ -2,7 +2,7 @@
 
 #------------------ solve the model ------------------#
 
-function solve_main(; para = para_de, diagnosis = false, save_results = false)
+function solve_main(;para = para_de, diagnosis = false, save_results = false)
 
     # function solve_main(; para = para_de, save_results = false)
 
@@ -19,7 +19,7 @@ function solve_main(; para = para_de, diagnosis = false, save_results = false)
     ini_mat_Ve = zeros(num_e, num_i)
     # ini_mat_Ve = repeat(ini_vec_Ve, 1, num_i)
 
-    sol, error_flag = solve_model(ini_vec_Vi, ini_vec_Ve, ini_mat_Ve, bounds_in = bounds_in, bounds_ex = bounds_ex, sol_uc_in = sol_uc_in, sol_uc_ex = sol_uc_ex, para = para, max_iter = 3000, diagnosis = diagnosis)
+    sol, error_flag = solve_model(ini_vec_Vi, ini_vec_Ve, ini_mat_Ve, bounds_in = bounds_in, bounds_ex = bounds_ex, sol_uc_in = sol_uc_in, sol_uc_ex = sol_uc_ex, para = para, max_iter = 10000, diagnosis = diagnosis)
 
     if save_results
         save("cm.jld", "vec_Vi", sol.vec_Vi, "vec_Ve", sol.vec_Ve, "mat_Ve", sol.mat_Ve, "mat_Mu", sol.mat_Mu, "mat_cStar", sol.mat_cStar, "mat_dummiesStar", sol.mat_dummiesStar, "arr_Mu", sol.arr_Mu, "arr_cStar", sol.arr_cStar, "arr_dummiesStar", sol.arr_dummiesStar, "mat_Mu_bm", sol.mat_Mu_bm, "mat_cStar_bm", sol.mat_cStar_bm, "mat_dummiesStar_bm", sol.mat_dummiesStar_bm)
@@ -28,7 +28,7 @@ function solve_main(; para = para_de, diagnosis = false, save_results = false)
     return sol, error_flag
 end
 
-function solve_model(vec_Vi, vec_Ve, mat_Ve; bounds_in = bounds_de, bounds_ex = bounds_de, sol_uc_in = sol_uc_de, sol_uc_ex = sol_uc_de, para = para_de, err_tol = 1e-4, diff_err_tol = 1e-10, max_iter = 5000, diagnosis = false)
+function solve_model(vec_Vi, vec_Ve, mat_Ve; bounds_in = bounds_de, bounds_ex = bounds_de, sol_uc_in = sol_uc_de, sol_uc_ex = sol_uc_de, para = para_de, err_tol = 1e-5, diff_err_tol = 1e-10, max_iter = 10000, diagnosis = false)
 
     @unpack r, λi, λe, γi, γe, num_i, num_e, vec_prob_i, vec_prob_e, mat_prob_ie, num_dcases = para
 
@@ -46,14 +46,14 @@ function solve_model(vec_Vi, vec_Ve, mat_Ve; bounds_in = bounds_de, bounds_ex = 
     vec_TVi = copy(vec_Vi)
 
     # initialize iterations
-    print_skip = 50
+    print_skip = 100
     iterate_count = 0
     err = err_tol + 1.0
-    diff_err = diff_err_tol + 1.0
+    # diff_err = diff_err_tol + 1.0
 
-    # while (iterate_count < max_iter) && (err > err_tol)
+    while (iterate_count < max_iter) && (err > err_tol)
 
-    while (iterate_count < max_iter) && (err > err_tol) && (diff_err > diff_err_tol)
+    # while (iterate_count < max_iter) && (err > err_tol) && (diff_err > diff_err_tol)
 
         ######################
         # INTERNAL CONTRACTS #
@@ -130,9 +130,9 @@ function solve_model(vec_Vi, vec_Ve, mat_Ve; bounds_in = bounds_de, bounds_ex = 
         V = vcat(vec_Ve, reshape(mat_Ve, :, 1), vec_Vi)
         TV = vcat(vec_TVe, reshape(mat_TVe, :, 1), vec_TVi)
 
-        old_err = err # save the previous err to old_err
+        # old_err = err # save the previous err to old_err
         err = Base.maximum(abs, TV - V) # calculate the new err as err
-        diff_err = abs(err - old_err) # calculate the difference
+        # diff_err = abs(err - old_err) # calculate the difference
 
         if (iterate_count % print_skip == 0) && diagnosis
             println("       >>> compute iterate $iterate_count with error $err ...")
@@ -179,10 +179,10 @@ function solve_model(vec_Vi, vec_Ve, mat_Ve; bounds_in = bounds_de, bounds_ex = 
 
     not_convergent = false
 
-    if (diff_err < diff_err_tol) || (iterate_count >= max_iter)
+    if iterate_count >= max_iter
+    # if (diff_err < diff_err_tol) || (iterate_count >= max_iter)
         not_convergent = true
     end 
-
 
     return (vec_Vi = vec_Vi, vec_Ve = vec_Ve, mat_Ve = mat_Ve, mat_Mu = mat_Mu, mat_cStar = mat_cStar, mat_dummiesStar = mat_dummiesStar, arr_Mu = arr_Mu, arr_cStar = arr_cStar, arr_dummiesStar = arr_dummiesStar, mat_Mu_bm = mat_Mu_bm,mat_cStar_bm = mat_cStar_bm, mat_dummiesStar_bm = mat_dummiesStar_bm), not_convergent
 end

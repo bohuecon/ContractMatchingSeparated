@@ -28,10 +28,10 @@ function optimal_c_uc(;para = para_de, external = false)
     πi_s(c, dummies) = πi(c, dummies, β1, β2, vec_β, γ1, vec_γ)
     πe_s(c, dummies) = πe(c, dummies, β1, β2, vec_β, γ1, vec_γ)
 
-    # optimal c of i/e for each value of dummy combinations
+    # optimal c of i or e for each value of dummy combinations
     vec_ci = fill(0.0, num_dcases) 
     vec_ce = fill(0.0, num_dcases) 
-    # optimal pi_i/e for each value of dummy combinations
+    # optimal pi_i or pi_e for each value of dummy combinations
     vec_πi = fill(0.0, num_dcases) 
     vec_πe = fill(0.0, num_dcases) 
 
@@ -267,12 +267,40 @@ function contract_c(dummies_ind::Int, vi_val::Float64, ve_val::Float64, πi_s::F
     c_lower = max(ci_lower, ce_lower)
     c_upper = min(ci_upper, ce_upper)
 
+    c_uc = vec_ci[dummies_ind]
+
     if c_lower < c_upper
         flag = 1
-        result = optimize(c -> - πi_ss(c), c_lower, c_upper)
-        c_star = result.minimizer
-        πi_star = -result.minimum
-        πe_star = πe_ss(c_star)
+        # result = optimize(c -> - πi_ss(c), c_lower, c_upper)
+        # c_star = result.minimizer
+        # πi_star = -result.minimum
+        # πe_star = πe_ss(c_star)
+        if (c_uc < c_upper) && (c_uc > c_lower)
+            c_star = c_uc
+            πi_star = πi_ss(c_star)
+            πe_star = πe_ss(c_star)
+        else
+            # c_uc is not in between
+
+            # result = optimize(c -> - πi_ss(c), c_lower, c_upper)
+            # c_star = result.minimizer
+            # # πi_star = max(-result.minimum, vi_val)
+            # πi_star = -result.minimum
+            # # πe_star = max(πe_ss(c_star), ve_val)
+            # πe_star = πe_ss(c_star)
+            
+            πi_upper = πi_ss(c_upper)
+            πi_lower = πi_ss(c_lower)
+            if πi_upper > πi_lower
+                c_star = c_upper
+                πi_star = πi_upper
+                πe_star = πe_ss(c_upper)
+            else
+                c_star = c_lower
+                πi_star = πi_lower
+                πe_star = πe_ss(c_lower)
+            end
+        end
     else
         flag = 0
         c_star = 0.0

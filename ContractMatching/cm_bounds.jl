@@ -42,7 +42,7 @@ function cLowerBoundGen(π_ss, cGrids)
 end
 
 
-function cBoundsFunc(; para = para_de, sol_uc = sol_uc_de, grid_length = 200, external = false)
+function cBoundsFunc(; para = para_de, sol_uc = sol_uc_de, grid_length = 10000, external = false)
 
     @unpack vec_dummies, num_dcases, h, ρ = para
     β1, β2, vec_β, γ1, vec_γ = read_contract_para(para, external)

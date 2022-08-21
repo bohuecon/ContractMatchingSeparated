@@ -43,7 +43,6 @@ function externalContractPolicyUpdate!(arr_Mu, arr_cStar, arr_dummiesStar, mat_M
         # external match is different from internal match only if e and iota can form internal match and the internal match value of (i,e) is lower
 
         if ieInternalMatch && eiotaInternalMatch && internalMatchingValue_e < ve_val                    
-
             externalContract = externalContractFunc(i_ind, e_ind, vi_val, ve_val, sol_uc = sol_uc, para = para, bounds = bounds)
 
             if externalContract.flag # if matching with higher mat_Ve, then update with the new contract

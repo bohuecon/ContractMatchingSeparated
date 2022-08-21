@@ -1,10 +1,5 @@
 include("./ContractMatching/ContractMatching.jl")
 
-# para1 = InternalCandi.para()
-# est_para_initial = [8.0, 3.2, 8.0*1.2847, 3.2, 1.927, 3.602, 3.142, 4.152, -1.37, 1.5, -1.5/0.68, 0.41, 0.29, -0.001, 0.151, -1.66, -2.12, 0.001, -400.0, 14.5]
-# moments1, err = InternalCandi.genMoments(est_para = est_para_initial)
-# score_initial = score(est_para_initial, dataMoment, WeightMatrix)
-
 using JLD
 using DataFrames
 using Distributions
@@ -65,8 +60,9 @@ function score(est_para::Vector, dataMoment::Vector, WeightMatrix::Matrix; diagn
 end
 
 
-function StructEst(;MaxTime::Float64=120.0) 
-	# MaxTime optimizer: the maximum running time in seconds 
+function StructEst(;
+	SearchMethod = :adaptive_de_rand_1_bin_radiuslimited,
+	MaxTime::Float64=120.0) # optimizer: the maximum running time in seconds 
 	
 	println("\n 1. Set Up: loading data moments and weight matrix")
 	println("We have dataMoment, momentName, and WeightMatrix")
@@ -91,144 +87,78 @@ function StructEst(;MaxTime::Float64=120.0)
 		est_para_name = [
 						# "λi", "λe", "γi", "γe", "ai", "bi", "ae", "be", "ρ", 
 						"Δβ1_in", "β2_in", "β3_in", "β4_in", "β5_in", "γ1_in", "γ3_in", "γ4_in", "γ5_in", "κ0_in", "κ1_in",
-						"Δβ1_ex", "Δβ2_ex", "Δβ3_ex", "Δβ4_ex", "Δβ5_ex", "Δγ1_ex", "Δγ3_ex", "Δγ4_ex", "Δγ5_ex", "Δκ0_ex", "Δκ1_ex"
+						"Δβ1_ex", "Δβ2_ex", "Δβ3_ex", "Δβ4_ex", "Δβ5_ex", "Δγ1_ex", "Δγ3_ex", "Δγ4_ex", "Δγ5_ex", "κ0_ex", "κ1_ex"
 						# "β1_ex", "β2_ex", "β3_ex", "β4_ex", "β5_ex", "γ1_ex", "γ3_ex", "γ4_ex", "γ5_ex", "κ0_ex", "κ1_ex",
 						]
 
-        # est_para_initial = [7.9669, 6.4285, 11.3733, 19.6905, 4.3613, 5.6546, 4.7125, 9.0024, -0.2923, 5.5108, -8.3194, -1.0298, -0.2501, 1.4096, 4.0561, 13.9467, 1.5728, -19.5414, -239.0179, 7.2275]
-
         est_para_initial = [
 				   # common parameters λi, λe, γi, γe, ai, bi, ae, be, ρ
-					# 5.54431, 14.9405, 8.01613, 1.35146, 1.16238, 6.70227, 3.12045, 3.46072, -0.526669,
-				    # 7.9669, 6.4285, 11.3733, 19.6905, 4.3613, 5.6546, 4.7125, 9.0024, -0.2923,
-				   # internal Δβ1, β2, Δβ3, Δβ4, Δβ5, γ1, γ3, γ4, γ5, κ0, κ1
-				   0.6624, -8.3194, 7.2896, 8.0693, 8.4491, 4.0561, 13.9467, 1.5728, -19.5414, -239.0179, 7.2275,
+				   # 7.9669, 19.4285, 11.3733, 9.6905, 3.45, 9.68, 7.30, 5.00, -0.12,
+				   # internal β1, β2, β3, β4, β5, γ1, γ3, γ4, γ5, κ0, κ1
+				   0.8572, -1.49635, 0.0138, -0.3717, 0.0191, 0.995683, -0.253625, 0.992825, 0.999949, -2.90806, 0.225924,
 				   # external Δβ1_ex, Δβ2_ex, Δβ3_ex, Δβ4_ex, Δβ5_ex, Δγ1_ex, Δγ3_ex, Δγ4_ex, Δγ5_ex, κ0_ex, κ1_ex
-				   # 0.65, 1.0, 6.44, 5.29, 6.08, 1.0, 1.0, 1.0, 1.0, -147.622, 43.5689
-				   1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -239.0179, 7.2275
+				   1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -2.90806, 0.225924
 				   ]
 
+		para_initial = ContractMatching.est_para2model_para(est_para_initial)
 
-        # score_initial = score(est_para_initial, dataMoment, WeightMatrix, diagnosis = true)
-        score_initial = score(est_para_initial, dataMoment, WeightMatrixDiag, diagnosis = false)
-
-        println("The initial score is $score_initial.")
 		display([est_para_name est_para_initial])
-		println()
-
-		# set bounds on parameters
-		tBounds = [ 
-					#bounds,  est_para,  model_para
-					# (7.966, 7.967),   # λi,  λi
-					# (6.428, 6.429),   # λe,  λe
-					# (11.373, 11.374),   # γi,  γi
-					# (16.690, 16.691),   # γe,  γe
-					# (4.361, 4.362),   # ai,  ai
-					# (2.0, 15.0),   # bi,  bi
-					# (1.0, 10.0),   # ae,  ae
-					# (1.0, 15.0),   # be,  be
-					# (-1.0, -0.05), # ρ,  ρ
-					(0.5, 0.9),    # Δβ1,  β1 = -β2 * Δβ1
-					(-10.0, -6.0),  # β2,  β2
-					(5.0, 10.0),   # Δβ3, β3 = β2 + Δβ3
-					(0.1, 10.0),   # Δβ4, β4 = β2 + Δβ4
-					(0.1, 25.0),   # Δβ5, β5 = β2 - β3 - β4 + Δβ5
-					(0.1, 6.0),  # γ1, γ1
-					(5.00, 25.00),  # γ3, γ3
-					(-5.00, 25.00),  # γ4, γ4
-					(-25.00, 25.00),  # γ5, γ5
-					(-300.0, -100.0),  # κ0, κ0
-					(1.0, 50.0),    # κ1, κ1
-					(0.8, 1.2),       # Δβ1_ex, β1_ex = β1 * Δβ1_ex
-					(0.8, 1.2),       # Δβ2_ex, β2_ex = β2 * Δβ2
-					# (0.1, 25.0),      # Δβ3_ex, β3_ex = β2_ex + Δβ3_ex
-					# (0.1, 25.0),      # Δβ4_ex, β4_ex = β2_ex + Δβ4_ex
-					# (0.1, 25.0),      # Δβ5_ex, β5_ex = β2_ex + β3_ex + β4_ex + Δβ5_ex
-					(0.8, 1.2),      # Δβ3_ex, β3_ex = β3 * Δβ3_ex
-					(0.8, 1.2),      # Δβ4_ex, β4_ex = β4 * Δβ4_ex
-					(0.8, 1.2),      # Δβ5_ex, β5_ex = β5 * Δβ5_ex
-					(0.8, 1.2),       # Δγ1_ex, γ1_ex = γ1 * Δγ1_ex
-					(0.8, 1.2),       # Δγ3_ex, γ3_ex = γ3 * Δγ3_ex
-					(0.8, 1.2),       # Δγ4_ex, γ4_ex = γ4 * Δγ4_ex
-					(0.8, 1.2),       # Δγ5_ex, γ5_ex = γ5 * Δγ5_ex
-					(-300.0, -100.0),  # κ0_ex, κ0_ex
-					(1.0, 50.0),    # κ1_ex, κ1_ex
-				] 
-
-          # A very general bounds vector
-	      #   tBounds = [ 
-				# 	#bounds,  est_para,  model_para
-				# 	(3.0, 20.0),   # λi,  λi
-				# 	(1.0, 20.0),   # λe,  λe
-				# 	(3.0, 20.0),   # γi,  γi
-				# 	(2.0, 20.0),   # γe,  γe
-				# 	(2.0, 15.0),   # ai,  ai
-				# 	(2.0, 15.0),   # bi,  bi
-				# 	(1.0, 10.0),   # ae,  ae
-				# 	(1.0, 15.0),   # be,  be
-				# 	(-1.0, -0.05), # ρ,  ρ
-				# 	(0.5, 0.9),    # Δβ1,  β1 = -β2 * Δβ1
-				# 	(-10.0, -1.0),  # β2,  β2
-				# 	(0.1, 30.0),   # Δβ3, β3 = β2 + Δβ3
-				# 	(0.1, 30.0),   # Δβ4, β4 = β2 + Δβ4
-				# 	(0.1, 30.0),   # Δβ5, β5 = β2 + β3 + β4 + Δβ5
-				# 	(0.1, 25.00),  # γ1, γ1
-				# 	(-25.00, 25.00),  # γ3, γ3
-				# 	(-25.00, 25.00),  # γ4, γ4
-				# 	(-25.00, 25.00),  # γ5, γ5
-				# 	(-250.0, 100.0),  # κ0, κ0
-				# 	(0.01, 80.00),    # κ1, κ1
-				# 	(0.5, 0.9),       # Δβ1_ex, β1_ex = - β2_ex * Δβ1_ex
-				# 	(0.8, 1.2),       # Δβ2_ex, β2_ex = β2 * Δβ2
-				# 	(0.1, 30.0),      # Δβ3_ex, β3_ex = β2_ex + Δβ3_ex
-				# 	(0.1, 30.0),      # Δβ4_ex, β4_ex = β2_ex + Δβ4_ex
-				# 	(0.1, 30.0),      # Δβ5_ex, β5_ex = β2_ex + β3_ex + β4_ex + Δβ5_ex
-				# 	(0.8, 1.2),       # Δγ1_ex, γ1_ex = γ1 * Δγ1_ex
-				# 	(0.8, 1.2),       # Δγ3_ex, γ3_ex = γ3 * Δγ3_ex
-				# 	(0.8, 1.2),       # Δγ4_ex, γ4_ex = γ4 * Δγ4_ex
-				# 	(0.8, 1.2),       # Δγ5_ex, γ5_ex = γ5 * Δγ5_ex
-				# 	(-250.0, 100.0),  # κ0_ex, κ0_ex
-				# 	(0.01, 80.00),    # κ1_ex, κ1_ex
-				# ] 
-
-        # set lambda: number of samples to take per iteration, here means each process take 3 samples, could also be 4 or 5
-        # if lambda = 0 is set, then it will be set based on the number of dimensions
-        # default value of lambda (when it is set as 0), lambda = 4 + ceil(Int, log(3*d))
-        # nParticles =  (nprocs()-1) * 3  # number of samples to take per iteration
-	    # MaxTime = 1 * 60.0  # in seconds and the number before * is the minutes
-		# other options
-		# TraceInterval= .1, 
-		# PopulationSize = 10.,
-		# SaveFitnessTraceToCsv = true, 
-		# SaveParameters = true,
-
-		opt = bbsetup(θ -> score(θ, dataMoment, WeightMatrix, diagnosis = false);
-					  # Method = :separable_nes, 
-					  Method = :adaptive_de_rand_1_bin_radiuslimited,
-					  SearchRange = tBounds, 
-					  ini_x = est_para_initial,
-					  TraceMode = :verbose, 
-					  MinDeltaFitnessTolerance=1e-4,
-					  SaveTrace = true, 
-					  SaveParameters = true, 
-					  MaxTime = MaxTime,   # MaxTime = 40*1.0,
-					  # lambda = nParticles, # number of samples to take per iteration
-					  # max_sigma = 100.,   # Maximal sigma, default max_sigma => 1.0E+10
-					  # Workers = workers(),
-					  ) 
 		
+        score_initial = score(est_para_initial, dataMoment, WeightMatrix, diagnosis = true)
+        println("\n The initial score is $score_initial. \n")
    
-	println("3. Minimization: going on ... ")
+	println("\n 3. Minimization: going on ... ")
 		println("------------------------------------ \n")
-		res = bboptimize(opt)
-		# get moments and covariance matrix at optimal theta
+
+		tBounds = [ 
+			#bounds,  est_para,  model_para
+			# (7.966, 7.967),   # λi,  λi
+			# (6.428, 6.429),   # λe,  λe
+			# (11.373, 11.374),   # γi,  γi
+			# (16.690, 16.691),   # γe,  γe
+			# (4.361, 4.362),   # ai,  ai
+			# (2.0, 15.0),   # bi,  bi
+			# (1.0, 10.0),   # ae,  ae
+			# (1.0, 15.0),   # be,  be
+			# (-1.0, -0.05), # ρ,  ρ
+			# (0.5, 0.9),    # Δβ1,  β1 = -β2 * Δβ1
+			# (-10.0, -6.0),  # β2,  β2
+			# (5.0, 10.0),   # Δβ3, β3 = β2 + Δβ3
+			# (0.1, 10.0),   # Δβ4, β4 = β2 + Δβ4
+			# (0.1, 25.0),   # Δβ5, β5 = β2 - β3 - β4 + Δβ5
+			(0.0, 1.0),    # β1
+			(-2.0, 0.0),   # β2
+			(-1.0, 1.0),   # β3
+			(-1.0, 1.0),   # β4
+			(-1.0, 1.0),   # β5
+			(0.0, 2.5),    # γ1
+			(-1.0, 2.5),   # γ3
+			(-1.0, 2.5),   # γ4
+			(-1.0, 2.5),   # γ5
+			(-5.0, 0.0),   # κ0
+			(0.001, 1.00), # κ1
+			(0.8, 1.2),       # Δβ1_ex, β1_ex = β1 * Δβ1_ex
+			(0.8, 1.2),       # Δβ2_ex, β2_ex = β2 * Δβ2
+			(0.8, 1.2),       # Δβ3_ex, β3_ex = β3 * Δβ3_ex
+			(0.8, 1.2),       # Δβ4_ex, β4_ex = β4 * Δβ4_ex
+			(0.8, 1.2),       # Δβ5_ex, β5_ex = β5 * Δβ5_ex
+			(0.8, 1.2),       # Δγ1_ex, γ1_ex = γ1 * Δγ1_ex
+			(0.8, 1.2),       # Δγ3_ex, γ3_ex = γ3 * Δγ3_ex
+			(0.8, 1.2),       # Δγ4_ex, γ4_ex = γ4 * Δγ4_ex
+			(0.8, 1.2),       # Δγ5_ex, γ5_ex = γ5 * Δγ5_ex
+			(-5.0, 0.0),      # κ0_ex, κ0_ex
+			(0.001, 1.00),    # κ1_ex, κ1_ex
+		] 
+
+		score_obj(θ) = score(θ, dataMoment, WeightMatrix, diagnosis = false)
+		res = bboptimize(score_obj, est_para_initial; Method = SearchMethod, SearchRange = tBounds, TraceMode = :verbose, MinDeltaFitnessTolerance=1e-4, SaveTrace = true, SaveParameters = true, MaxTime = MaxTime)
 		ThetaStar = res.archive_output.best_candidate
 		println("------------------------------------ \n")
 
-	println("4. Inference \n")
+	println("\n 4. Inference ")
 	println("------------------------------------ \n")
 
-	println("\n 4.1 Compare Model and Data Moments \n")
+	println("\n 4.1 Compare Model and Data Moments")
 	println("------------------------------------ \n")
 
 	# ThetaStar = est_para_initial;
